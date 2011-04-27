@@ -85,10 +85,7 @@
                 throw("[livetabs] no pane selector specified");
               }
 
-              console.log(href);
               var style        = href && href.charAt(0) !== "#" ? 'ajax' : 'plain';
-
-              console.log(style,href[0]);
 
               if(!href || href.match(/^#$/)){
                 throw("[livetabs] Invalid Pane Selector -> ["+href+"]");
