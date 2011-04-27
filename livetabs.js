@@ -31,8 +31,11 @@
         $(paneId).
           siblings().
             hide().
+            removeClass(Tab.prototype.currentClass).
             end().
-          show();
+          show().
+          addClass(Tab.prototype.currentClass).
+          trigger('tabLoad');
       },
 
       ajax: function(e){
@@ -45,7 +48,11 @@
         }
 
         $(paneSelector).load(href,function(){
-          $(this).trigger('tabLoad');
+          $(this).
+            trigger('tabLoad').
+            addClass(Tab.prototype.currentClass).
+            siblings().
+              removeClsas(Tab.prototype.currentClass);
         });
       }
     },
@@ -119,4 +126,3 @@
   });
 
 })($);
-
