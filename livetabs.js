@@ -1,14 +1,13 @@
-// I needed stateless live tabs, so Istarted them. Hopefully more neat stuff to come. 
-// - Stefan Penner
-//
 (function($){
-  $.fn.liveTabs = function(options){ 
-    var config = $.extend(true,{
-      style:'plain',
-      tabs: this,
-      tabCollectionSelector: this.selector
-    },options),
-      tab = new Tab(config).init();
+  $.fn.liveTabs = function(options){
+    this.each(function(){
+      var tabBar = $(this),
+          config = $.extend(true,{
+        tabs:  tabBar,
+        tabCollectionSelector: tabBar.selector
+      },options),
+        tab = new Tab(config).init();
+    });
 
     return this;
   };
@@ -17,15 +16,18 @@
     $.extend(this,options);
   };
 
-  Tab.UUID_index = 0;
   Tab.prototype = {
-    style: 'plain',
-    tabSelector: 'a',
+    currentClass: 'exo-state-current',
+    tabSelector:  'a',
     styles: {
       plain: function(e){
         var a = $(this),
-        paneId = a.attr("data-pane");
-     
+        paneId = a.attr("data-pane") || a.attr('href');
+
+        if(!paneId || paneId.m){
+          throw("Pane Id must be specified");
+        }
+
         $(paneId).
           siblings().
             hide().
@@ -34,9 +36,13 @@
       },
 
       ajax: function(e){
-        var a = $(this),
-        href = a.attr('href'),
+        var a        = $(this),
+        href         = a.attr('href'),
         paneSelector = a.attr("data-pane");
+
+        if(!href || !paneSelector){
+          throw("Ajax Tab Failed -- we need both href and paneSelector");
+        }
 
         $(paneSelector).load(href,function(){
           $(this).trigger('tabLoad');
@@ -45,35 +51,75 @@
     },
 
     afterLoad: function(){
-      this.tabs.trigger('afterLoad'); 
+      this.tabs.trigger('afterLoad');
+    },
+
+    tabItems: function(){
+      return this.tabs.find(this.tabSelector);
+    },
+
+    currentTabSelector: function(){
+      return '.' + this.currentClass;
+    },
+
+    currentTab: function(){
+      return this.tabs.find(this.tabSelector).filter(this.currentTabSelector());
     },
 
     init: function(){
-      this.tabs.
-        find(this.tabSelector).
-          live('click',{liveTabs:this},function(e){
 
-            // can cache this stuff if needed?
-            var a      = $(this),
-              liveTabs = e.data.liveTabs,
-              tabs     = a.closest(liveTabs.tabCollectionSelector),
+      this.
+        tabItems().
+        live('click',{ liveTabs: this},
+          function(e){
+            e.preventDefault();
+
+            var a          = $(this),
+              liveTabs     = e.data.liveTabs,
+              tabs         = a.closest(liveTabs.tabCollectionSelector),
               historyName  = tabs.attr("data-model"),
-              state = {};
+              state        = {},
+              href         = a.attr('href');
+
+              if(!href){
+                throw("[livetabs] no pane selector specified");
+              }
+
+              console.log(href);
+              var style        = href && href.charAt(0) !== "#" ? 'ajax' : 'plain';
+
+              console.log(style,href[0]);
+
+              if(!href || href.match(/^#$/)){
+                throw("[livetabs] Invalid Pane Selector -> ["+href+"]");
+              }
 
               state[historyName] = a.attr("data-id");
 
+              // OMG STEAK
               if($.bbq) $.bbq.pushState(state);
 
-              tabs.find(liveTabs.tabSelector).removeClass("current");
-              a.addClass("current");
+              liveTabs.
+                currentTab().
+                removeClass(liveTabs.currentClass);
 
-            liveTabs.styles[liveTabs.style].apply(this,e);
+              a.addClass(liveTabs.currentClass);
 
-            e.preventDefault();
-          }).
-            first().
-            trigger('click');
-      return this;
+            liveTabs.styles[style].call(this,e);
+
+          });
+
+      if(this.currentTab().length < 1){
+        this.tabItems().first().trigger('click');
+      }
+
+      return false;
     }
   };
+
+  $(function(){
+    jQuery('.exo-tab-bar').liveTabs();
+  });
+
 })($);
+
