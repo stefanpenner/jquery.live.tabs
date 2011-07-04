@@ -1,4 +1,5 @@
 (function($){
+
   $.fn.liveTabs = function(options){
     this.each(function(){
       var tabBar = $(this),
@@ -12,12 +13,14 @@
     return this;
   };
 
-  var Tab = $.fn.liveTabs.Tab = function(options){
+  // set you own global custom prefix
+  var PREFIX = $.fn.liveTabs.PREFIX = $.fn.liveTabs.PREFIX || '',
+         Tab = $.fn.liveTabs.Tab    = function(options){
     $.extend(this,options);
   };
 
   Tab.prototype = {
-    currentClass: 'exo-state-current',
+    currentClass: PREFIX+'state-current',
     tabSelector:  'a',
     styles: {
       plain: function(e){
@@ -47,12 +50,17 @@
           throw("Ajax Tab Failed -- we need both href and paneSelector");
         }
 
-        $(paneSelector).load(href,function(){
+        $(paneSelector).load(href,function(data){
           $(this).
-            trigger('tabLoad').
+            empty().
+            append(data).
+            show().
             addClass(Tab.prototype.currentClass).
             siblings().
-              removeClsas(Tab.prototype.currentClass);
+              removeClass(Tab.prototype.currentClass).
+              hide().
+              end().
+            trigger('tabLoad');
         });
       }
     },
@@ -122,7 +130,7 @@
   };
 
   $(function(){
-    jQuery('.exo-tab-bar').liveTabs();
+    jQuery('.'+PREFIX+'tab-bar').liveTabs();
   });
 
 })($);
