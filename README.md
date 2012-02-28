@@ -1,11 +1,9 @@
-jQuery Live Tabs
-================
+# jQuery Live Tabs
 
 jQuery tab implementation that binds at runtime. Only some semantic markup is needed, not binding at runtime.
 
 
-Example
-=======
+## Example
 
     <!DOCTYPE html>
     <html>
